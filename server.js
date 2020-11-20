@@ -8,7 +8,10 @@ const fetch = require('node-fetch');
 const { ParkingLot } = require('./server/models');
 const { findOne } = require('./server/models/parkingLots');
 
-mongoose.connect('mongodb://localhost/parking', {useNewUrlParser: true, useUnifiedTopology: true});
+const {
+  MONGO_HOSTNAME
+} = process.env;
+mongoose.connect('mongodb://${MONGO_HOSTNAME}/parking', {useNewUrlParser: true, useUnifiedTopology: true});
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
