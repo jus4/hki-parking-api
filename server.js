@@ -6,12 +6,8 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const fetch = require('node-fetch');
 const { ParkingLot } = require('./server/models');
-const { findOne } = require('./server/models/parkingLots');
 
-const {
-  MONGO_HOSTNAME
-} = process.env;
-mongoose.connect('mongodb://${MONGO_HOSTNAME}/parking', {useNewUrlParser: true, useUnifiedTopology: true});
+mongoose.connect('mongodb://localhost/parking', {useNewUrlParser: true, useUnifiedTopology: true});
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
@@ -48,7 +44,6 @@ cron.schedule('15,30,45,59 * * * *', async function(){
         .then(res => res.json())
         .then((json) => {
             return json;
-            // do something with JSON
     });
 
     for (x = 0;x < data.results.length; x++) {
@@ -74,11 +69,7 @@ cron.schedule('15,30,45,59 * * * *', async function(){
 });
 
 
-
 require('./server/routes')(app);
-
-
-
 
 console.log(process.env.NODE_ENV);
 console.log('Environment: ' + environment);
