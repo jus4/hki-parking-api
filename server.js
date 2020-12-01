@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 const fetch = require('node-fetch');
 const { ParkingLot } = require('./server/models');
 
-mongoose.connect('mongodb://localhost/parking', {useNewUrlParser: true, useUnifiedTopology: true});
+mongoose.connect('mongodb://localhost/test', {useNewUrlParser: true, useUnifiedTopology: true});
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
@@ -35,8 +35,58 @@ const findParking = async (id) => {
     return newParkingLot;
 }
 
+// Average time testing
+const  setAverageStats = async (id) => {
+   const parkingArea = await ParkingLot.findById(id);
+   let update = [];
+   const stats = parkingArea.parkingHistory;
 
-cron.schedule('15,30,45,59 * * * *', async function(){
+   if ( stats.length == 0 || stats.parkingHistory === 'undefined') {
+       return;
+   }
+  
+   const groupByDate = stats.reduce( function(acc, obj) {
+        let time = new Date(obj.time);
+        let key = time.toLocaleDateString();
+        if (!acc[key]) {
+            acc[key] = []
+        }
+        acc[key].push(obj)
+        return acc
+   },{});
+
+   // Set average parking by day
+   const countAverage = Object.keys(groupByDate).map(key => {
+        const records = groupByDate[key].length;
+        const obj = groupByDate[key];
+        let count = 0;
+        for (let index = 0; index < records; index++) {
+            if ( obj[index].parkingCount > 0 ) {
+                count = count + parseInt(obj[index].parkingCount);
+            }
+        }
+        
+        const dateParts = key.split('/')
+        const newDate = new Date(+dateParts[2], dateParts[0] - 1, +dateParts[1] +1 ); // For some reason the day is one day off, because of locale
+        update.push({ time: newDate, parkingAverage: Math.ceil((count / records)) });
+   })
+   parkingArea.parkingHistory = [];
+   parkingArea.parkingHistoryStats = [...parkingArea.parkingHistoryStats, ...update];
+   parkingArea.save();
+
+}
+
+
+cron.schedule('0 21 * * *', async function(){
+    ParkingLot.find( {}, function( err, parkingLots) {
+        parkingLots.forEach( parkingLot => {
+            console.log(parkingLot);
+            setAverageStats(parkingLot._id);
+        })
+    })
+})
+
+cron.schedule('15,30,45,59 8-18 * * *', async function(){
     console.log('Fetch started');
     let url = 'https://pubapi.parkkiopas.fi/public/v1/parking_area_statistics/?page_size=2000';
     let settings = { method: "Get" };

@@ -4,7 +4,7 @@ const { ParkingLot } = require('./models');
 
 module.exports = function(app) {
     router.get('/parking/history', async function(req,res) {
-        const parkingHistoryStats = await ParkingLot.find({$expr: {$gte: [{$size: "$parkingHistory"}, 2]}});
+        const parkingHistoryStats = await ParkingLot.find({$expr: {$gte: [{$size: "$parkingHistoryStats"}, 2]}});
         const stats = parkingHistoryStats.map( element => {
             return element.referenceId
         })
