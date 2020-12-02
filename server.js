@@ -39,7 +39,7 @@ const findParking = async (id) => {
 cron.schedule('15,30,45,59 * * * *', async function(){
     console.log('Fetch started');
     let url = 'https://pubapi.parkkiopas.fi/public/v1/parking_area_statistics/?page_size=2000';
-    let settings = { method: "Get" };
+    const settings = { method: "Get" };
     const data = await fetch(url, settings)
         .then(res => res.json())
         .then((json) => {
@@ -59,8 +59,7 @@ cron.schedule('15,30,45,59 * * * *', async function(){
             });
 
             ParkingArea.save(function(err, document) {
-                if (err) console.log(err)
-                console.log(document);
+                if (err) console.warn(err)          
             });
         }
 
